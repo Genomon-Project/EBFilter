@@ -1,0 +1,10 @@
+---
+# path to the reference genome
+PATH_TO_REF: /home/your_username/ref/hg19.fasta
+
+# mapping quality threshould
+TH_MAPPING_QUAL: 30
+
+# base quality threshould
+TH_BASE_QUAL: 15
+

@@ -1,0 +1,14 @@
+---
+# the vcf file for somatic mutation candidates
+TARGET_VCF: tumor.vcf
+
+# the path to target (tumor) bam file
+TARGET_BAM: tumor.bam
+
+# the path to non-matched control bam files
+NONMATCHED_CONTROL_BAM:
+    - control1.bam
+    - control2.bam
+    - control3.bam
+    - control4.bam
+    - control5.bam
