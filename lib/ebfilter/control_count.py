@@ -33,7 +33,7 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres):
         filter_quals += str( unichr( qual ) )
 
 
-    if depth == 0: return "0,0,0,0"
+    if depth == 0: return [0,0,0,0]
 
     deleted = 0
     iter = ReIndel.finditer(baseBar)
@@ -88,6 +88,6 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres):
         misMatch_p = 0
         misMatch_n = 0
 
-    return ','.join([str(misMatch_p), str(depth_p), str(misMatch_n), str(depth_n)])
+    return [misMatch_p, depth_p, misMatch_n, depth_n]
 
 
