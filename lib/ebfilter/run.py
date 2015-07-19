@@ -3,6 +3,7 @@
 import process_vcf
 import control_count
 import beta_binomial
+import utils
 import os, subprocess
 import vcf, pysam, numpy
 
@@ -70,7 +71,7 @@ def main(args):
 
         print str(alpha_p) + '\t' + str(beta_p)
         print str(alpha_n) + '\t' + str(beta_n)
-        print str(pvalue_p) + '\t' + str(pvalue_n)
+        print str(pvalue_p) + '\t' + str(pvalue_n) + '\t' + str(utils.fisher_combination([pvalue_p, pvalue_n]))
 
 
 
