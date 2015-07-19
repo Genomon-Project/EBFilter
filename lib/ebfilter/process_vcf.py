@@ -22,7 +22,7 @@ def vcf2bed(inputFilePath, outputFilePath):
     hOUT.close()
 
 
-def vcf2pileup(inputFilePath, outputFilePath, controlBamPathList, mapping_qual_thres, base_qual_thres):
+def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, is_multi):
 
     vcf_reader = vcf.Reader(open(inputFilePath, 'r'))
     hOUT = open(outputFilePath, 'w')
@@ -32,11 +32,14 @@ def vcf2pileup(inputFilePath, outputFilePath, controlBamPathList, mapping_qual_t
 
         mutReg = record.CHROM + ":" + str(record.POS) + "-" + str(record.POS)
 
-        print ' '.join(["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-b", controlBamPathList, "-r", mutReg])
+        print ' '.join(["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-b", bamPath, "-r", mutReg])
         # mpileup =  pysam.mpileup("-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-b", controlBamPathList, "-r", mutReg)
         # print >> hOUT, mpileup
 
-        subprocess.call(["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-b", controlBamPathList, "-r", mutReg], stdout = hOUT, stderr = FNULL)
+        if is_multi == True:
+            subprocess.call(["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-b", bamPath, "-r", mutReg], stdout = hOUT, stderr = FNULL)
+        else:
+            subprocess.call(["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), bamPath, "-r", mutReg], stdout = hOUT, stderr = FNULL)
 
     FNULL.close()
     hOUT.close()

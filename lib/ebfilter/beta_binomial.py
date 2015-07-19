@@ -19,7 +19,10 @@ def beta_binom_pvalue(params, n, k):
 
     tempPV = 0
     for kk in range(k, n + 1):
-        tempPV = tempPV + beta_binomial_density(params, n, kk)
+
+        currentValue = beta_binomial_density(params, n, kk)
+        tempPV = tempPV + currentValue
+
 
     return tempPV
 
