@@ -4,7 +4,7 @@ import process_vcf
 import control_count
 import beta_binomial
 import utils
-import os, subprocess
+import sys, os, subprocess, math
 import vcf, pysam, numpy
 
 def main(args):
@@ -45,6 +45,15 @@ def main(args):
 
 
     vcf_reader2 = vcf.Reader(open(targetMutationFile, 'r'))
+    # metadata addition
+    # vcf_reader2.infos['EB'].id = "EB"
+    # vcf_reader2.infos['EB'].desc = "EBCall Score"
+
+    vcf_reader2.infos['EB'] = vcf.parser._Info('EB', 1, 'Float', "EBCall Score", "EBCall", "ver0.1.0")
+
+
+    vcf_writer =vcf.Writer(sys.stdout, vcf_reader2)
+
 
     for vcf_record in vcf_reader2:
         F_target = pos2pileup_target[str(vcf_record.CHROM) + '\t' + str(vcf_record.POS)].split('\t')
@@ -69,10 +78,19 @@ def main(args):
         pvalue_p = beta_binomial.beta_binom_pvalue([alpha_p, beta_p], depthCounts_target_p, varCounts_target_p)
         pvalue_n = beta_binomial.beta_binom_pvalue([alpha_n, beta_n], depthCounts_target_n, varCounts_target_n)
 
-        print str(alpha_p) + '\t' + str(beta_p)
-        print str(alpha_n) + '\t' + str(beta_n)
-        print str(pvalue_p) + '\t' + str(pvalue_n) + '\t' + str(utils.fisher_combination([pvalue_p, pvalue_n]))
+        EB_pvalue = utils.fisher_combination([pvalue_p, pvalue_n])
+        EB_score = 0
+        if EB_pvalue < 1e-60:
+            EB_score = 60
+        else:
+            EB_score = - round(math.log10(EB_pvalue), 3)
 
+        vcf_record.INFO['EB'] = EB_score
 
+        # print str(alpha_p) + '\t' + str(beta_p)
+        # print str(alpha_n) + '\t' + str(beta_n)
+        # print str(pvalue_p) + '\t' + str(pvalue_n) + '\t' + str(utils.fisher_combination([pvalue_p, pvalue_n]))
+
+        vcf_writer.write_record(vcf_record)
 
 
