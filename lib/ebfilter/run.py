@@ -87,9 +87,12 @@ def main(args):
 
         vcf_record.INFO['EB'] = EB_score
 
-        # print str(alpha_p) + '\t' + str(beta_p)
-        # print str(alpha_n) + '\t' + str(beta_n)
-        # print str(pvalue_p) + '\t' + str(pvalue_n) + '\t' + str(utils.fisher_combination([pvalue_p, pvalue_n]))
+        """
+        print '\t'.join([str(varCounts_target_p), str(depthCounts_target_p), str(varCounts_target_n),  str(depthCounts_target_n)])
+        print str(alpha_p) + '\t' + str(beta_p)
+        print str(alpha_n) + '\t' + str(beta_n)
+        print str(-math.log10(pvalue_p)) + '\t' + str(-math.log10(pvalue_n)) + '\t' + str(utils.fisher_combination([pvalue_p, pvalue_n]))
+        """
 
         vcf_writer.write_record(vcf_record)
 
