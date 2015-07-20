@@ -22,6 +22,35 @@ def vcf2bed(inputFilePath, outputFilePath):
     hOUT.close()
 
 
+def partition_vcf(inputFilePath, outputFilePrefix, partitionNum):
+
+    vcf_reader1 = vcf.Reader(filename = inputFilePath)
+    recordNum = 0
+    for record in vcf_reader1:
+        recordNum += 1
+
+    partitionNum_mod = min(recordNum, partitionNum)
+    eachPartitionNum = recordNum / partitionNum_mod
+
+    currentPartition = 0
+    currentRecordNum = 0
+    
+    vcf_reader2 = vcf.Reader(filename = inputFilePath)
+    vcf_writer = vcf.Writer(open(outputFilePrefix + "0", 'w'), vcf_reader2)
+    for record in vcf_reader2:
+        vcf_writer.write_record(record)
+        currentRecordNum += 1
+        if currentRecordNum >= eachPartitionNum and currentPartition < partitionNum_mod - 1:
+            currentPartition += 1
+            currentRecordNum = 0
+            vcf_writer.close()
+            vcf_writer = vcf.Writer(open(outputFilePrefix + str(currentPartition), 'w'), vcf_reader2) 
+
+    vcf_writer.close()
+
+    return partitionNum_mod
+
+
 def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, is_multi):
 
     vcf_reader = vcf.Reader(open(inputFilePath, 'r'))
