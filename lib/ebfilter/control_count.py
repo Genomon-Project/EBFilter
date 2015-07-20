@@ -1,10 +1,15 @@
 #! /usr/bin/env python
 
+import collections
 import pysam, re, sys
 
 ReIndel = re.compile('([\+\-])([0-9]+)([ACGTNacgtn]+)')
 ReStart = re.compile('\^.')
 ReEnd = re.compile('\$')
+
+# autovivification
+Tree = lambda: collections.defaultdict(Tree)
+
 
 def checkCount(targetBam, controlBams, mutPosList, Params):
 
@@ -35,6 +40,12 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres):
 
     if depth == 0: return [0,0,0,0]
 
+    # indel = Tree()
+    insertion_p = 0
+    insertion_n = 0
+    deletion_p = 0
+    deletion_n = 0
+
     deleted = 0
     iter = ReIndel.finditer(baseBar)
     for m in iter:
@@ -44,18 +55,28 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres):
         varChar = m.group(3)[0:int(indelSize)]
 
         """
-        if varChar.islower():
-            strand = ( '-', '+' )
-        else:
-            strand = ( '+', '-' )
-
-        key = '\t'.join( coordinate + [ varChar.upper() ] )
-        if type in indel and key in indel[ type ]:
-            indel[ type ][ key ][ strand[ 0 ] ] += 1
-        else:
-            indel[ type ][ key ][ strand[ 0 ] ] = 1
-            indel[ type ][ key ][ strand[ 1 ] ] = 0
+        if not (type in indel and varChar.upper() in indel[type]):
+            indel[type][varChar.upper()]['+'] = 0
+            indel[type][varChar.upper()]['-'] = 0
+       
+        strand = '+' if varChar.islower() else '-' 
+        indel[type][varChar.upper()][strand] += 1
         """
+
+        strand = '+' if varChar.islower() else '-'
+        if type == "+":
+            if strand == "+":
+                insertion_p += 1
+            else:
+                insertion_n += 1
+        else:
+            if strand == "+":
+                deletion_p += 1
+            else:
+                deletion_n += 1
+
+        print type + '\t' + varChar.upper() + '\t' + strand
+
 
         baseBar = baseBar[0:(site - deleted)] + baseBar[(site + int(indelSize) + len(indelSize) + 1 - deleted):]
         deleted += 1 + len(indelSize) + int(indelSize)
@@ -73,20 +94,37 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres):
 
     base_num = {"A": 0, "C": 0, "G": 0, "T": 0, "N": 0, "a": 0, "c": 0, "g": 0, "t": 0, "n": 0}
 
-    for base, qual in zip(baseBar, qualBar):
-        if not ( qual in filter_quals ):
+    # for indel check we ignore base qualities
+    if var in "ACGTacgt":
+        for base, qual in zip(baseBar, qualBar):
+            if not ( qual in filter_quals ):
+                if base in "ATGCNatgcn":
+                    base_num[base] += 1
+    else:
+        for base in baseBar:
             if base in "ATGCNatgcn":
                 base_num[base] += 1
 
+
     depth_p = base_num["A"] + base_num["C"] + base_num["G"] + base_num["T"] + base_num["N"]
     depth_n = base_num["a"] + base_num["c"] + base_num["g"] + base_num["t"] + base_num["n"]
+
+
+    misMatch_p = 0
+    misMatch_n = 0
    
     if var in "ACGTacgt":
         misMatch_p = base_num[var.upper()]
         misMatch_n = base_num[var.lower()]    
     else:
-        misMatch_p = 0
-        misMatch_n = 0
+        if var[0] == "+":
+            misMatch_p, misMatch_n = insertion_p, insertion_n
+        elif var[0] == "-":
+            misMatch_p, misMatch_n = deletion_p, deletion_n
+        else:
+            print >> sys.stderr, "input var has wrong format!"
+            sys.exit(1)
+
 
     return [misMatch_p, depth_p, misMatch_n, depth_n]
 
