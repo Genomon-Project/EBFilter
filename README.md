@@ -2,9 +2,16 @@
 
 ## Introduction
 
-EBFilter is a software for filtering false poistive somatic mutations in cancer genome sequencing data analysis,
-using the framework 
+EBFilter is a software for filtering false poistive somatic mutations in cancer genome sequencing data analysis.
+EBFilter accepts a list of candidates somatic mutation alreadly narrowed down to some extents, and performs the main step of [EBCall](https://github.com/friend1ws/EBCall), 
 
+1. estimate the parameters of the beta-binomial sequencing error model using multiple non-matched contorol sequencing data at the position of interest
+2. get the predictive mismatch ratio derived from the above estimation and compare it with the observed mismatch ratio of tumor samples
+3. if the mismatch ratio of the tumor sample is significantly deviated from the predicted mismatch ratio, then we idenitfy it as highly-likely somatic mutation
+
+Therefore, you can use EBFilter along with your own mutation calling program 
+or some popular mutation callers (e.g., MuTect, VarScan 2),
+which we believe will reduce large parts of false positives with a slight computational cost.
 
 ## Paper
 
@@ -13,7 +20,7 @@ We would like you to kindly cite the following paper when you use this software;
 "[An empirical Bayesian framework for mutation detection from cancer genome sequencing data](http://nar.oxfordjournals.org/content/41/7/e89.long)", Shiraishi et al.,  
 Nucleic Acids Research, 2013.
 
-
+<! --
 # Motivation
 
 One major source of false positive somatic mutation in cancer genome sequencing data analysis is,
@@ -34,6 +41,7 @@ Therefore, we decided to implement a software which just perform beta-binomial s
 Therefore, you can use this software after performing popular mutation callers (e.g., mutects, VarScan2,and so on),
 or your own inhouse mutation caling program, which we believe will reduce large parts of false positives.
 
+-->
 
 
 ## Dependency
@@ -41,8 +49,6 @@ or your own inhouse mutation caling program, which we believe will reduce large 
 ### Python
 Python (>= 2.7), `pysam`, `scipy`, `numpy`, `pyVCF` packages
 
-### Software
-tabix, bgzip, blat
 
 ## Install
 
