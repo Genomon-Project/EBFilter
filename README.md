@@ -20,7 +20,8 @@ We would like you to kindly cite the following paper when you use this software;
 "[An empirical Bayesian framework for mutation detection from cancer genome sequencing data](http://nar.oxfordjournals.org/content/41/7/e89.long)", Shiraishi et al.,  
 Nucleic Acids Research, 2013.
 
-<! --
+
+<!--
 # Motivation
 
 One major source of false positive somatic mutation in cancer genome sequencing data analysis is,
