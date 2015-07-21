@@ -51,6 +51,20 @@ def partition_vcf(inputFilePath, outputFilePrefix, partitionNum):
     return partitionNum_mod
 
 
+def merge_vcf(inputFilePrefix, outputFilePath, partitionNum):
+
+    vcf_reader = vcf.Reader(filename = inputFilePrefix + '0')
+    vcf_writer = vcf.Writer(open(outputFilePath, 'w'), vcf_reader)    
+
+    for i in range(partitionNum):
+        vcf_reader = vcf.Reader(filename = inputFilePrefix + str(i))
+        for record in vcf_reader:
+            vcf_writer.write_record(record)
+    
+    vcf_writer.close()
+
+
+
 def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, is_multi):
 
     vcf_reader = vcf.Reader(open(inputFilePath, 'r'))
