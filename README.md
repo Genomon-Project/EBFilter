@@ -67,10 +67,10 @@ All the input should be indexed bam files.
 - **target tumor sample**: the .bam file of the target tumor sample.
 - **list of normal reference samples**: the list of paths to .bam files for non-paired normal reference samples. Please name the text file as you like (e.g., myNormalRef.txt), and list the paths of .bam files as follows:  
 
-	/home/yshira/ngs/data/sequence/normalreference1.bam
-	/home/yshira/ngs/data/sequence/normalreference2.bam
-	...
-	/home/yshira/ngs/data/sequence/normalreference10.bam
+		/home/yshira/ngs/data/sequence/normalreference1.bam
+		/home/yshira/ngs/data/sequence/normalreference2.bam
+		...
+		/home/yshira/ngs/data/sequence/normalreference10.bam
 
 
 ## Commands
