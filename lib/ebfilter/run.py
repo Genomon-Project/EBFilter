@@ -45,6 +45,7 @@ def EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, outpu
         F_target = pos2pileup_target[str(vcf_record.CHROM) + '\t' + str(vcf_record.POS)].split('\t')
         F_pileup = pos2pileup_control[str(vcf_record.CHROM) + '\t' + str(vcf_record.POS)].split('\t')
 
+        # obtain the mismatch numbers and depths of target sequence data for positive and negative strands
         varCounts_target_p, depthCounts_target_p, varCounts_target_n, depthCounts_target_n = control_count.varCountCheck(str(vcf_record.ALT[0]), F_target[0], F_target[1], F_target[2], base_qual_thres)
 
         varCounts_control_p = [0] * controlFileNum
@@ -52,15 +53,19 @@ def EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, outpu
         depthCounts_control_p = [0] * controlFileNum
         depthCounts_control_n = [0] * controlFileNum
 
+        # obtain the mismatch numbers and depths (for positive and negative strands) of control sequence data
         for i in range(controlFileNum):
             varCounts_control_p[i], depthCounts_control_p[i], varCounts_control_n[i], depthCounts_control_n[i] = control_count.varCountCheck(str(vcf_record.ALT[0]), F_pileup[3 * i], F_pileup[1 + 3 * i], F_pileup[2 + 3 * i], base_qual_thres)
 
+        # estimate the beta-binomial parameters for positive and negative strands
         alpha_p, beta_p = beta_binomial.fit_beta_binomial(numpy.array(depthCounts_control_p), numpy.array(varCounts_control_p))
         alpha_n, beta_n = beta_binomial.fit_beta_binomial(numpy.array(depthCounts_control_n), numpy.array(varCounts_control_n))
 
+        # evaluate the p-values of target mismatch numbers for positive and negative strands
         pvalue_p = beta_binomial.beta_binom_pvalue([alpha_p, beta_p], depthCounts_target_p, varCounts_target_p)
         pvalue_n = beta_binomial.beta_binom_pvalue([alpha_n, beta_n], depthCounts_target_n, varCounts_target_n)
 
+        # perform Fisher's combination methods for integrating two p-values of positive and negative strands
         EB_pvalue = utils.fisher_combination([pvalue_p, pvalue_n])
         EB_score = 0
         if EB_pvalue < 1e-60:
@@ -68,6 +73,8 @@ def EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, outpu
         else:
             EB_score = - round(math.log10(EB_pvalue), 3)
 
+
+        # add the score and write the vcf record
         vcf_record.INFO['EB'] = EB_score
         vcf_writer.write_record(vcf_record)
 
@@ -94,10 +101,10 @@ def main(args):
 
 
     if thread_num == 1:
-        # non multi-thread mode
+        # non multi-threading mode
         EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres)
     else:
-
+        # multi-threading mode
         ##########
         # partition vcf files
         process_vcf.partition_vcf(targetMutationFile, outputPath + ".tmp.input.vcf.", thread_num)
@@ -109,10 +116,11 @@ def main(args):
             jobs.append(process)
             process.start()
 
-
+        # wait all the jobs to be done
         for i in range(thread_num):
             jobs[i].join()
 
+        # merge the individual results
         process_vcf.merge_vcf(outputPath + ".tmp.input.vcf.", outputPath, thread_num)
 
         # delete intermediate files

@@ -11,25 +11,6 @@ ReEnd = re.compile('\$')
 Tree = lambda: collections.defaultdict(Tree)
 
 
-def checkCount(targetBam, controlBams, mutPosList, Params):
-
-    # mapping quality threshould
-    # TH_MAPPING_QUAL = Params["TH_MAPPING_QUAL"]
-    TH_MAPPING_QUAL = 20
-
-    # base quality threshould
-    TH_BASE_QUAL = Params["TH_BASE_QUAL"]
-
-    """
-    for line in pysam.mpileup("-B", "-d", "10000000", "-q", str(TH_MAPPING_QUAL), "-l", mutPosList, "-Q", "0", controlBams)
-
-        print line
-
- 
-    """
-
-
-
 def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres):
 
     # this should be moved to global (just one evaluation should be enough...
@@ -55,6 +36,7 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres):
         varChar = m.group(3)[0:int(indelSize)]
 
         """
+        # just leave these codes for the case where I want to evaluate indels in more detail....
         if not (type in indel and varChar.upper() in indel[type]):
             indel[type][varChar.upper()]['+'] = 0
             indel[type][varChar.upper()]['-'] = 0
