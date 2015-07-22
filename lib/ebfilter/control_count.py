@@ -11,7 +11,7 @@ ReEnd = re.compile('\$')
 Tree = lambda: collections.defaultdict(Tree)
 
 
-def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres):
+def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres, verbose):
 
     # this should be moved to global (just one evaluation should be enough...
     filter_quals = ''
@@ -22,10 +22,8 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres):
     if depth == 0: return [0,0,0,0]
 
     # indel = Tree()
-    insertion_p = 0
-    insertion_n = 0
-    deletion_p = 0
-    deletion_n = 0
+    insertion_p, insertion_n, deletion_p, deletion_n = 0, 0, 0, 0
+    insertion_vb_p, insertion_vb_n, deletion_vb_p, deletion_vb_n = 0, 0, 0, 0
 
     deleted = 0
     iter = ReIndel.finditer(baseBar)
@@ -45,19 +43,23 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres):
         indel[type][varChar.upper()][strand] += 1
         """
 
-        strand = '+' if varChar.islower() else '-'
+        strand = '+' if varChar.isupper() else '-'
         if type == "+":
             if strand == "+":
-                insertion_p += 1
+                insertion_vb_p += 1
+                if var[1:].upper() == varChar.upper(): insertion_p += 1
             else:
-                insertion_n += 1
+                insertion_vb_n += 1
+                if var[1:].upper() == varChar.upper(): insertion_n += 1
         else:
             if strand == "+":
-                deletion_p += 1
+                deletion_vb_p += 1
+                if var[1:].upper() == varChar.upper(): deletion_p += 1
             else:
-                deletion_n += 1
+                deletion_vb_n += 1
+                if var[1:].upper() == varChar.upper(): deletion_n += 1
 
-        print type + '\t' + varChar.upper() + '\t' + strand
+        # print type + '\t' + var + '\t' + varChar.upper() + '\t' + strand
 
 
         baseBar = baseBar[0:(site - deleted)] + baseBar[(site + int(indelSize) + len(indelSize) + 1 - deleted):]
@@ -100,11 +102,17 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres):
         misMatch_n = base_num[var.lower()]    
     else:
         if var[0] == "+":
-            misMatch_p, misMatch_n = insertion_p, insertion_n
+            if verbose == True:
+                misMatch_p, misMatch_n = insertion_vb_p, insertion_vb_n
+            else:
+                misMatch_p, misMatch_n = insertion_p, insertion_n
         elif var[0] == "-":
-            misMatch_p, misMatch_n = deletion_p, deletion_n
+            if verbose == True:
+                misMatch_p, misMatch_n = deletion_vb_p, deletion_vb_n
+            else:
+                misMatch_p, misMatch_n = deletion_p, deletion_n
         else:
-            print >> sys.stderr, "input var has wrong format!"
+            print >> sys.stderr, var + ": input var has wrong format!"
             sys.exit(1)
 
 

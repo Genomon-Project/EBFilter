@@ -45,33 +45,59 @@ def EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, outpu
         F_target = pos2pileup_target[str(vcf_record.CHROM) + '\t' + str(vcf_record.POS)].split('\t')
         F_pileup = pos2pileup_control[str(vcf_record.CHROM) + '\t' + str(vcf_record.POS)].split('\t')
 
-        # obtain the mismatch numbers and depths of target sequence data for positive and negative strands
-        varCounts_target_p, depthCounts_target_p, varCounts_target_n, depthCounts_target_n = control_count.varCountCheck(str(vcf_record.ALT[0]), F_target[0], F_target[1], F_target[2], base_qual_thres)
-
-        varCounts_control_p = [0] * controlFileNum
-        varCounts_control_n = [0] * controlFileNum
-        depthCounts_control_p = [0] * controlFileNum
-        depthCounts_control_n = [0] * controlFileNum
-
-        # obtain the mismatch numbers and depths (for positive and negative strands) of control sequence data
-        for i in range(controlFileNum):
-            varCounts_control_p[i], depthCounts_control_p[i], varCounts_control_n[i], depthCounts_control_n[i] = control_count.varCountCheck(str(vcf_record.ALT[0]), F_pileup[3 * i], F_pileup[1 + 3 * i], F_pileup[2 + 3 * i], base_qual_thres)
-
-        # estimate the beta-binomial parameters for positive and negative strands
-        alpha_p, beta_p = beta_binomial.fit_beta_binomial(numpy.array(depthCounts_control_p), numpy.array(varCounts_control_p))
-        alpha_n, beta_n = beta_binomial.fit_beta_binomial(numpy.array(depthCounts_control_n), numpy.array(varCounts_control_n))
-
-        # evaluate the p-values of target mismatch numbers for positive and negative strands
-        pvalue_p = beta_binomial.beta_binom_pvalue([alpha_p, beta_p], depthCounts_target_p, varCounts_target_p)
-        pvalue_n = beta_binomial.beta_binom_pvalue([alpha_n, beta_n], depthCounts_target_n, varCounts_target_n)
-
-        # perform Fisher's combination methods for integrating two p-values of positive and negative strands
-        EB_pvalue = utils.fisher_combination([pvalue_p, pvalue_n])
-        EB_score = 0
-        if EB_pvalue < 1e-60:
-            EB_score = 60
+        current_ref = str(vcf_record.REF)
+        current_alt = str(vcf_record.ALT[0])
+        var = ""
+        if len(current_ref) == 1 and len(current_alt) == 1:
+            var = current_alt
         else:
-            EB_score = - round(math.log10(EB_pvalue), 3)
+            if len(current_ref) == 1:
+                var = "+" + current_alt[1:]
+            elif len(current_alt) == 1:
+                var = "-" + current_ref[1:]
+
+        EB_score = "." # if the variant is complex, we ignore that
+
+        if not var == "":
+
+            # obtain the mismatch numbers and depths of target sequence data for positive and negative strands
+            varCounts_target_p, depthCounts_target_p, varCounts_target_n, depthCounts_target_n = control_count.varCountCheck(var, F_target[0], F_target[1], F_target[2], base_qual_thres, False)
+
+            varCounts_control_p = [0] * controlFileNum
+            varCounts_control_n = [0] * controlFileNum
+            depthCounts_control_p = [0] * controlFileNum
+            depthCounts_control_n = [0] * controlFileNum
+
+            # obtain the mismatch numbers and depths (for positive and negative strands) of control sequence data
+            for i in range(controlFileNum):
+                varCounts_control_p[i], depthCounts_control_p[i], varCounts_control_n[i], depthCounts_control_n[i] = control_count.varCountCheck(var, F_pileup[3 * i], F_pileup[1 + 3 * i], F_pileup[2 + 3 * i], base_qual_thres, True)
+
+            print '\t'.join([str(varCounts_target_p), str(depthCounts_target_p), str(varCounts_target_n), str(depthCounts_target_n)])
+            print numpy.array(depthCounts_control_p)
+            print numpy.array(varCounts_control_p)
+            print numpy.array(depthCounts_control_n)
+            print numpy.array(varCounts_control_n)
+
+            # estimate the beta-binomial parameters for positive and negative strands
+            alpha_p, beta_p = beta_binomial.fit_beta_binomial(numpy.array(depthCounts_control_p), numpy.array(varCounts_control_p))
+            alpha_n, beta_n = beta_binomial.fit_beta_binomial(numpy.array(depthCounts_control_n), numpy.array(varCounts_control_n))
+
+            print '\t'.join([str(alpha_p), str(beta_p), str(alpha_n), str(beta_n)])
+
+            # evaluate the p-values of target mismatch numbers for positive and negative strands
+            pvalue_p = beta_binomial.beta_binom_pvalue([alpha_p, beta_p], depthCounts_target_p, varCounts_target_p)
+            pvalue_n = beta_binomial.beta_binom_pvalue([alpha_n, beta_n], depthCounts_target_n, varCounts_target_n)
+
+            print '\t'.join([str(pvalue_p), str(pvalue_n)])
+
+            # perform Fisher's combination methods for integrating two p-values of positive and negative strands
+            EB_pvalue = utils.fisher_combination([pvalue_p, pvalue_n])
+            print EB_pvalue
+            EB_score = 0
+            if EB_pvalue < 1e-60:
+                EB_score = 60
+            else:
+                EB_score = - round(math.log10(EB_pvalue), 3)
 
 
         # add the score and write the vcf record
