@@ -43,21 +43,30 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres, verbose):
         indel[type][varChar.upper()][strand] += 1
         """
 
+        var_match = False
+        if var[0] == "-":
+            # for deletion, just checking the size is OK
+            if len(var[1:]) == len(varChar):
+                var_match = True
+        elif var[1:].upper() == varChar.upper():
+            var_match = True
+
+
         strand = '+' if varChar.isupper() else '-'
         if type == "+":
             if strand == "+":
                 insertion_vb_p += 1
-                if var[1:].upper() == varChar.upper(): insertion_p += 1
+                if var_match: insertion_p += 1
             else:
                 insertion_vb_n += 1
-                if var[1:].upper() == varChar.upper(): insertion_n += 1
+                if var_match: insertion_n += 1
         else:
             if strand == "+":
                 deletion_vb_p += 1
-                if var[1:].upper() == varChar.upper(): deletion_p += 1
+                if var_match: deletion_p += 1
             else:
                 deletion_vb_n += 1
-                if var[1:].upper() == varChar.upper(): deletion_n += 1
+                if var_match: deletion_n += 1
 
         # print type + '\t' + var + '\t' + varChar.upper() + '\t' + strand
 

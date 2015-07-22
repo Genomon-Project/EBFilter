@@ -70,11 +70,10 @@ python setup.py install
 		/home/yshira/ngs/data/sequence/normalreference2.bam
 		...
 		/home/yshira/ngs/data/sequence/normalreference10.bam
-- **path to reference sequence**: the path to the faidx indexed reference sequence
 
 ## Commands
 
-    EBFilter target.vcf target.bam list_normal_sample.txt reference.fa output.vcf
+    EBFilter target.vcf target.bam list_normal_sample.txt output.vcf
   
 - **-q**: The threshold of mapping quality. The short reads wholse mapping quality are smaller than this value are skipped [defaut: 20].
 - **-Q**: The threshold of base quality. The bases whose base quality are smaller than this value are skipped [default: 15].

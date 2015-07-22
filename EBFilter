@@ -16,9 +16,6 @@ parser.add_argument("targetBamPath", metavar = "target.bam", type = str,
 parser.add_argument("controlBamPathList", metavar = "controlBam_list.txt", type = str,
                           help = "the list of paths to control bam files")
 
-parser.add_argument("referenceSequence", metavar = "reference.fa", type = str,
-                          help = "the path to the reference sequence")
-
 parser.add_argument("outputPath", metavar = "output.vcf", type = str,
                           help = "the path to the output")
 

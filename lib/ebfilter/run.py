@@ -8,14 +8,14 @@ import sys, os, subprocess, math, multiprocessing
 import vcf, pysam, numpy
 
 
-def EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, referenceSequence, outputPath, mapping_qual_thres, base_qual_thres):
+def EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres):
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
     ##########
     # generate pileup files
-    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, referenceSequence, mapping_qual_thres, base_qual_thres, False)
-    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, referenceSequence, mapping_qual_thres, base_qual_thres, True)
+    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False)
+    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True)
     ##########
 
     ##########
@@ -82,7 +82,6 @@ def EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, refer
             pvalue_p = beta_binomial.beta_binom_pvalue([alpha_p, beta_p], depthCounts_target_p, varCounts_target_p)
             pvalue_n = beta_binomial.beta_binom_pvalue([alpha_n, beta_n], depthCounts_target_n, varCounts_target_n)
 
-
             # perform Fisher's combination methods for integrating two p-values of positive and negative strands
             EB_pvalue = utils.fisher_combination([pvalue_p, pvalue_n])
             EB_score = 0
@@ -90,7 +89,6 @@ def EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, refer
                 EB_score = 60
             else:
                 EB_score = - round(math.log10(EB_pvalue), 3)
-
 
         # add the score and write the vcf record
         vcf_record.INFO['EB'] = EB_score
@@ -112,7 +110,6 @@ def main(args):
     targetBamPath = args.targetBamPath
     controlBamPathList = args.controlBamPathList
     outputPath = args.outputPath
-    referenceSequence = args.referenceSequence
 
     mapping_qual_thres = args.q
     base_qual_thres = args.Q
@@ -121,7 +118,7 @@ def main(args):
 
     if thread_num == 1:
         # non multi-threading mode
-        EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, referenceSequence, outputPath, mapping_qual_thres, base_qual_thres)
+        EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres)
     else:
         # multi-threading mode
         ##########
@@ -131,7 +128,7 @@ def main(args):
         jobs = []
         for i in range(thread_num):
             process = multiprocessing.Process(target = EBFilter_worker, args = \
-                (outputPath + ".tmp.input.vcf." + str(i), targetBamPath, controlBamPathList, referenceSequence, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres))
+                (outputPath + ".tmp.input.vcf." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres))
             jobs.append(process)
             process.start()
 
@@ -140,7 +137,7 @@ def main(args):
             jobs[i].join()
 
         # merge the individual results
-        process_vcf.merge_vcf(outputPath + ".tmp.input.vcf.", outputPath, thread_num)
+        process_vcf.merge_vcf(outputPath + ".", outputPath, thread_num)
 
         # delete intermediate files
         for i in range(thread_num):
