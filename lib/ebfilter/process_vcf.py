@@ -46,7 +46,7 @@ def merge_vcf(inputFilePrefix, outputFilePath, partitionNum):
 
 
 
-def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, is_multi):
+def vcf2pileup(inputFilePath, outputFilePath, bamPath, referenceSequence, mapping_qual_thres, base_qual_thres, is_multi):
 
     vcf_reader = vcf.Reader(open(inputFilePath, 'r'))
     hOUT = open(outputFilePath, 'w')
@@ -54,14 +54,29 @@ def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_
 
     for record in vcf_reader:
 
+        # check whether the variant is deletion or not
+        is_deletion = False
+        current_ref = str(record.REF)
+        current_alt = str(record.ALT[0])
+        is_deletion = True if len(current_ref) > 1 and len(current_alt) == 1 else False
+
+
         mutReg = record.CHROM + ":" + str(record.POS) + "-" + str(record.POS)
+        
+        samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-r", mutReg]
 
-        print ' '.join(["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-b", bamPath, "-r", mutReg])
-
+        # have to use the reference_sequence for getting exact bases for deletion (only use for deletion of target sample)
+        if is_deletion and is_multi == False:
+            samtools_mpileup_commands = samtools_mpileup_commands + ["-f", referenceSequence]
+        
         if is_multi == True:
-            subprocess.call(["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-b", bamPath, "-r", mutReg], stdout = hOUT, stderr = FNULL)
+            samtools_mpileup_commands = samtools_mpileup_commands + ["-b", bamPath]
         else:
-            subprocess.call(["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), bamPath, "-r", mutReg], stdout = hOUT, stderr = FNULL)
+            samtools_mpileup_commands = samtools_mpileup_commands + [bamPath]
+
+        # print ' '.join(samtools_mpileup_commands)
+
+        subprocess.call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
 
     FNULL.close()
     hOUT.close()

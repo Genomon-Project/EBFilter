@@ -8,14 +8,14 @@ import sys, os, subprocess, math, multiprocessing
 import vcf, pysam, numpy
 
 
-def EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres):
+def EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, referenceSequence, outputPath, mapping_qual_thres, base_qual_thres):
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
     ##########
     # generate pileup files
-    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False)
-    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True)
+    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, referenceSequence, mapping_qual_thres, base_qual_thres, False)
+    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, referenceSequence, mapping_qual_thres, base_qual_thres, True)
     ##########
 
     ##########
@@ -72,27 +72,19 @@ def EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, outpu
             for i in range(controlFileNum):
                 varCounts_control_p[i], depthCounts_control_p[i], varCounts_control_n[i], depthCounts_control_n[i] = control_count.varCountCheck(var, F_pileup[3 * i], F_pileup[1 + 3 * i], F_pileup[2 + 3 * i], base_qual_thres, True)
 
-            print '\t'.join([str(varCounts_target_p), str(depthCounts_target_p), str(varCounts_target_n), str(depthCounts_target_n)])
-            print numpy.array(depthCounts_control_p)
-            print numpy.array(varCounts_control_p)
-            print numpy.array(depthCounts_control_n)
-            print numpy.array(varCounts_control_n)
 
             # estimate the beta-binomial parameters for positive and negative strands
             alpha_p, beta_p = beta_binomial.fit_beta_binomial(numpy.array(depthCounts_control_p), numpy.array(varCounts_control_p))
             alpha_n, beta_n = beta_binomial.fit_beta_binomial(numpy.array(depthCounts_control_n), numpy.array(varCounts_control_n))
 
-            print '\t'.join([str(alpha_p), str(beta_p), str(alpha_n), str(beta_n)])
 
             # evaluate the p-values of target mismatch numbers for positive and negative strands
             pvalue_p = beta_binomial.beta_binom_pvalue([alpha_p, beta_p], depthCounts_target_p, varCounts_target_p)
             pvalue_n = beta_binomial.beta_binom_pvalue([alpha_n, beta_n], depthCounts_target_n, varCounts_target_n)
 
-            print '\t'.join([str(pvalue_p), str(pvalue_n)])
 
             # perform Fisher's combination methods for integrating two p-values of positive and negative strands
             EB_pvalue = utils.fisher_combination([pvalue_p, pvalue_n])
-            print EB_pvalue
             EB_score = 0
             if EB_pvalue < 1e-60:
                 EB_score = 60
@@ -120,6 +112,7 @@ def main(args):
     targetBamPath = args.targetBamPath
     controlBamPathList = args.controlBamPathList
     outputPath = args.outputPath
+    referenceSequence = args.referenceSequence
 
     mapping_qual_thres = args.q
     base_qual_thres = args.Q
@@ -128,7 +121,7 @@ def main(args):
 
     if thread_num == 1:
         # non multi-threading mode
-        EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres)
+        EBFilter_worker(targetMutationFile, targetBamPath, controlBamPathList, referenceSequence, outputPath, mapping_qual_thres, base_qual_thres)
     else:
         # multi-threading mode
         ##########
@@ -138,7 +131,7 @@ def main(args):
         jobs = []
         for i in range(thread_num):
             process = multiprocessing.Process(target = EBFilter_worker, args = \
-                (outputPath + ".tmp.input.vcf." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres))
+                (outputPath + ".tmp.input.vcf." + str(i), targetBamPath, controlBamPathList, referenceSequence, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres))
             jobs.append(process)
             process.start()
 

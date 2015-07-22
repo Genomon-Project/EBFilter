@@ -62,20 +62,19 @@ python setup.py install
 
 ## Preparation
 
-All the input should be indexed bam files.  
 - **target somatic mutation candidats**: the somatic mutation candidates (should be .vcf format).
-- **target tumor sample**: the .bam file of the target tumor sample.
-- **list of normal reference samples**: the list of paths to .bam files for non-paired normal reference samples. Please name the text file as you like (e.g., myNormalRef.txt), and list the paths of .bam files as follows:  
+- **target tumor sample**: the indexed bam file of the target tumor sample.
+- **list of normal reference samples**: the list of paths to the indexed bam files for non-paired normal reference samples. Please name the text file as you like (e.g., myNormalRef.txt), and list the paths of .bam files as follows:  
 
 		/home/yshira/ngs/data/sequence/normalreference1.bam
 		/home/yshira/ngs/data/sequence/normalreference2.bam
 		...
 		/home/yshira/ngs/data/sequence/normalreference10.bam
-
+- **path to reference sequence**: the path to the faidx indexed reference sequence
 
 ## Commands
 
-    EBFilter target.vcf target.bam list_normal_sample.txt output.vcf
+    EBFilter target.vcf target.bam list_normal_sample.txt reference.fa output.vcf
   
 - **-q**: The threshold of mapping quality. The short reads wholse mapping quality are smaller than this value are skipped [defaut: 20].
 - **-Q**: The threshold of base quality. The bases whose base quality are smaller than this value are skipped [default: 15].
