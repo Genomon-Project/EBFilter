@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser(prog = "EBFilter")
 parser.add_argument("--version", action = "version", version = "EBFilter-0.1.0")
 
 parser.add_argument("targetMutationFile", metavar = "target.vcf", type = str,
-                          help = "the path to the mutation file (vcf or annovar format)")
+                          help = "the path to the mutation file")
 
 parser.add_argument("targetBamPath", metavar = "target.bam", type = str,
                           help = "the path to the target bam file")
@@ -18,6 +18,9 @@ parser.add_argument("controlBamPathList", metavar = "controlBam_list.txt", type 
 
 parser.add_argument("outputPath", metavar = "output.vcf", type = str,
                           help = "the path to the output")
+
+parser.add_argument('-f', choices=['vcf', 'anno'], default = 'vcf',
+                    help = "the format of mutation file vcf or annovar (tsv) format")
 
 parser.add_argument('-t', metavar = "thread_num", default='1', type=int,
                     help = "the number of threads")
