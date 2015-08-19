@@ -7,8 +7,8 @@ def partition_anno(inputFilePath, outputFilePrefix, partitionNum):
 
     hIN = open(inputFilePath, 'r')
     recordNum = 0 
-        for record in vcf_reader1:
-            recordNum += 1
+    for line in hIN:
+        recordNum += 1
     hIN.seek(0, 0)
 
     partitionNum_mod = min(recordNum, partitionNum)
@@ -61,7 +61,7 @@ def anno2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base
 
         if F[4] == "-": # for deletion in anno format
             mutReg = F[0] + ":" + str(int(F[1]) - 1)  + "-" + str(int(F[1]) - 1)  
-        else
+        else:
             mutReg = F[0] + ":" + F[1] + "-" + F[1]
     
         samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-r", mutReg]

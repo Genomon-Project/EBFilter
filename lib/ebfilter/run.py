@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import process_vcf
+import process_anno
 import get_eb_score
 import sys, os, subprocess, math, multiprocessing 
 import vcf, pysam, numpy
@@ -106,13 +107,13 @@ def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, 
 
         F = line.rstrip('\n').split('\t')
         chr, pos, pos2, ref, alt = F[0], F[1], F[2], F[3], F[4]
-        if alt == "-": pos -= 1
+        if alt == "-": pos = str(int(pos) - 1)
 
         F_target = pos2pileup_target[chr + '\t' + pos].split('\t')
         F_control = pos2pileup_control[chr + '\t' + pos].split('\t')
 
         var = ""
-        if ref == "-" and alt == "-":
+        if ref != "-" and alt != "-":
             var = alt
         else:
             if ref == "-":
@@ -177,7 +178,7 @@ def main(args):
                 jobs[i].join()
         
             # merge the individual results
-            process_vcf.merge_vcf(outputPath + ".", outputPath, thread_num)
+            process_anno.merge_anno(outputPath + ".", outputPath, thread_num)
         
             # delete intermediate files
             for i in range(thread_num):
