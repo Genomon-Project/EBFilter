@@ -41,8 +41,9 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
 
 
     for vcf_record in vcf_reader:
-        F_target = pos2pileup_target[str(vcf_record.CHROM) + '\t' + str(vcf_record.POS)].split('\t')
-        F_control = pos2pileup_control[str(vcf_record.CHROM) + '\t' + str(vcf_record.POS)].split('\t')
+        current_pos = str(vcf_record.CHROM) + '\t' + str(vcf_record.POS) 
+        F_target = pos2pileup_target[current_pos].split('\t') if current_pos in pos2pileup_target else []
+        F_control = pos2pileup_control[current_pos].split('\t') if current_pos in pos2pileup_control else []
 
         current_ref = str(vcf_record.REF)
         current_alt = str(vcf_record.ALT[0])
@@ -109,8 +110,8 @@ def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, 
         chr, pos, pos2, ref, alt = F[0], F[1], F[2], F[3], F[4]
         if alt == "-": pos = str(int(pos) - 1)
 
-        F_target = pos2pileup_target[chr + '\t' + pos].split('\t')
-        F_control = pos2pileup_control[chr + '\t' + pos].split('\t')
+        F_target = pos2pileup_target[chr + '\t' + pos].split('\t') if chr + '\t' + pos in pos2pileup_target else []
+        F_control = pos2pileup_control[chr + '\t' + pos].split('\t') if chr + '\t' + pos in pos2pileup_control else [] 
 
         var = ""
         if ref != "-" and alt != "-":
