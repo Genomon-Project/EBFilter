@@ -85,18 +85,20 @@ When finished, the output.vcf includes the score calculated by validation by bet
 
 ## Test run
 
-We provide a set of test data files in the EBCall-master/testdata directory and the result in the EBCall-master/testresult directory.   
-Edit EBCall/testdata/list_normal_sample.txt to adjust the paths to the EBCall-master directory.
+We provide a set of test data files in the testdata directory.
+Type the following command after installing EBFilter:
+	
+	EBFilter testdata/input.vcf.gz testdata/tumor.bam testdata/list_normal_sample.txt output.vcf
+	
+Or for the annovar format:
 
-	/home/your_username/EBCall-master/testdata/normalreference1.bam
-	/home/your_username/EBCall-master/testdata/normalreference2.bam
-	...
-	/home/your_username/EBCall-master/testdata/normalreference10.bam
+	EBFilter -f anno testdata/input.anno testdata/tumor.bam testdata/list_normal_sample.txt output.anno
+	
+Then, compare the result with the golden-standard output in the testdata directory
 
-Type the following command after setup EBCall and compiling C++ programs. 
+	testdata/output.golden.vcf
+	testdata/output.golden.anno
+	
 
-	sh ebCall_v2.sh testdata/tumor.bam testdata/normal.bam testout testdata/list_normal_sample.txt
-
-Result is stored under the testout directory.
 
 
