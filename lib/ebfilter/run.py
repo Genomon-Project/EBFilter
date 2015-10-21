@@ -68,8 +68,8 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
 
 
     # delete intermediate files
-    subprocess.call(["rm", outputPath + '.target.pileup'])
-    subprocess.call(["rm", outputPath + '.control.pileup'])
+    # subprocess.call(["rm", outputPath + '.target.pileup'])
+    # subprocess.call(["rm", outputPath + '.control.pileup'])
 
 
 def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres):
@@ -153,6 +153,28 @@ def main(args):
     is_anno = True if args.f == 'anno' else False
 
 
+    # file existence check
+    if not os.path.exists(targetMutationFile):
+        print >> sys.stderr, "No target mutation file: " + targetMutationFile
+        sys.exit(1)
+
+    if not os.path.exists(targetBamPath):
+        print >> sys.stderr, "No target bam file: " + targetBamPath
+        sys.exit(1)
+
+    if not os.path.exists(controlBamPathList):
+        print >> sys.stderr, "No control list file: " + controlBamPathList 
+        sys.exit(1)
+
+    with open(controlBamPathList) as hIN:
+        for file in hIN:
+            file = file.rstrip()
+            if not os.path.exists(file):
+                print >> sys.stderr, "No control bam file: " + file 
+                sys.exit(1)
+
+
+     
     if thread_num == 1:
         # non multi-threading mode
         if is_anno == True:
