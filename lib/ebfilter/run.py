@@ -3,9 +3,8 @@
 import process_vcf
 import process_anno
 import get_eb_score
-import sys, os, subprocess, math, multiprocessing 
+import sys, os, subprocess, math, re, multiprocessing 
 import vcf, pysam, numpy
-
 
 def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres):
 
@@ -68,8 +67,8 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
 
 
     # delete intermediate files
-    # subprocess.call(["rm", outputPath + '.target.pileup'])
-    # subprocess.call(["rm", outputPath + '.control.pileup'])
+    subprocess.call(["rm", outputPath + '.target.pileup'])
+    subprocess.call(["rm", outputPath + '.control.pileup'])
 
 
 def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres):
@@ -162,6 +161,11 @@ def main(args):
         print >> sys.stderr, "No target bam file: " + targetBamPath
         sys.exit(1)
 
+    if not os.path.exists(targetBamPath + ".bai") and not os.path.exists(re.sub(r'bam$', "bai", targetBamPath)):
+        print >> sys.stderr, "No index for target bam file: " + targetBamPath
+        sys.exit(1)
+
+
     if not os.path.exists(controlBamPathList):
         print >> sys.stderr, "No control list file: " + controlBamPathList 
         sys.exit(1)
@@ -173,6 +177,9 @@ def main(args):
                 print >> sys.stderr, "No control bam file: " + file 
                 sys.exit(1)
 
+            if not os.path.exists(file + ".bai") and not os.path.exists(re.sub(r'bam$', "bai", file)):
+                print >> sys.stderr, "No index control bam file: " + file 
+                sys.exit(1)
 
      
     if thread_num == 1:
