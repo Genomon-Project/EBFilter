@@ -6,14 +6,16 @@ import get_eb_score
 import sys, os, subprocess, math, re, multiprocessing 
 import vcf, pysam, numpy
 
-def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption):
+region_exp = re.compile('^([^ \t\n\r\f\v,]+):(\d+)\-(\d+)')
+
+def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region):
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
     ##########
     # generate pileup files
-    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False, is_loption)
-    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True, is_loption)
+    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False, is_loption, region)
+    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True, is_loption, region)
     ##########
 
     ##########
@@ -34,6 +36,15 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
     hIN.close()
     ##########
 
+    ##########
+    # get restricted region if not None
+    if is_loption == True and region != "":
+        region_match = region_exp.match(region)
+        reg_chr = region_match.group(1)
+        reg_start = int(region_match.group(2))
+        reg_end = int(region_match.group(3))
+    ##########
+
     vcf_reader = vcf.Reader(open(targetMutationFile, 'r'))
     vcf_reader.infos['EB'] = vcf.parser._Info('EB', 1, 'Float', "EBCall Score", "EBCall", "ver0.1.0")
     vcf_writer =vcf.Writer(open(outputPath, 'w'), vcf_reader)
@@ -41,6 +52,11 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
 
     for vcf_record in vcf_reader:
         current_pos = str(vcf_record.CHROM) + '\t' + str(vcf_record.POS) 
+
+        if is_loption == True and region != "":
+            if reg_chr != vcf_record.CHROM: continue
+            if int(vcf_record.POS) < reg_start or int(vcf_record.POS) > reg_end: continue
+
         F_target = pos2pileup_target[current_pos].split('\t') if current_pos in pos2pileup_target else []
         F_control = pos2pileup_control[current_pos].split('\t') if current_pos in pos2pileup_control else []
 
@@ -71,14 +87,14 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
     subprocess.call(["rm", outputPath + '.control.pileup'])
 
 
-def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption):
+def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region):
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
     ##########
     # generate pileup files
-    process_anno.anno2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False, is_loption)
-    process_anno.anno2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True, is_loption)
+    process_anno.anno2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False, is_loption, region)
+    process_anno.anno2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True, is_loption, region)
     ##########
 
     ##########
@@ -99,15 +115,27 @@ def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, 
     hIN.close()
     ##########
 
+    ##########
+    # get restricted region if not None
+    if is_loption == True and region != "":
+        region_match = region_exp.match(region)
+        reg_chr = region_match.group(1)
+        reg_start = int(region_match.group(2))
+        reg_end = int(region_match.group(3))
+    ##########
+
     hIN = open(targetMutationFile, 'r')
     hOUT = open(outputPath, 'w')
-
 
     for line in hIN:
 
         F = line.rstrip('\n').split('\t')
         chr, pos, pos2, ref, alt = F[0], F[1], F[2], F[3], F[4]
         if alt == "-": pos = str(int(pos) - 1)
+
+        if is_loption == True and region != "":
+            if reg_chr != chr: continue
+            if int(pos) < reg_start or int(pos) > reg_end: continue
 
         F_target = pos2pileup_target[chr + '\t' + pos].split('\t') if chr + '\t' + pos in pos2pileup_target else []
         F_control = pos2pileup_control[chr + '\t' + pos].split('\t') if chr + '\t' + pos in pos2pileup_control else [] 
@@ -151,6 +179,14 @@ def main(args):
     thread_num = args.t
     is_anno = True if args.f == 'anno' else False
     is_loption = args.loption
+    region = args.region
+
+    # region format check
+    if region != "":
+        region_match = region_exp.match(region)
+        if region_match is None:
+            print >> sys.stderr, "Wrong format for --region ({chr}:{start}-{end}): " + region
+            sys.exit(1)
 
     # file existence check
     if not os.path.exists(targetMutationFile):
@@ -185,9 +221,9 @@ def main(args):
     if thread_num == 1:
         # non multi-threading mode
         if is_anno == True:
-            EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption)
+            EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region)
         else: 
-            EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption)
+            EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region)
     else:
         # multi-threading mode
         ##########

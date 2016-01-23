@@ -46,7 +46,7 @@ def merge_vcf(inputFilePrefix, outputFilePath, partitionNum):
 
 
 
-def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, is_multi, is_loption):
+def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, is_multi, is_loption, region):
 
     vcf_reader = vcf.Reader(open(inputFilePath, 'r'))
     hOUT = open(outputFilePath, 'w')
@@ -55,7 +55,7 @@ def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_
     if is_loption == True:
 
         # make bed file for mpileup
-        hOUT2 = open(outputFilePath + "region_list.bed", 'w')
+        hOUT2 = open(outputFilePath + ".region_list.bed", 'w')
         for record in vcf_reader:
             print >> hOUT2, record.CHROM + '\t' + str(record.POS - 1) + '\t' + str(record.POS)
 
@@ -64,12 +64,16 @@ def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_
         samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", \
                                     str(mapping_qual_thres), "-Q", str(base_qual_thres), "-l", outputFilePath + "region_list.bed"]
 
+        if region != "":
+            samtools_mpileup_commands = samtools_mpileup_commands + ["-r", region]
+
         if is_multi == True:
             samtools_mpileup_commands = samtools_mpileup_commands + ["-b", bamPath]
         else:
             samtools_mpileup_commands = samtools_mpileup_commands + [bamPath]
 
         subprocess.call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
+        subprocess.call(["rm", "-f", outputFilePath + ".region_list.bed"])
 
     else:
 

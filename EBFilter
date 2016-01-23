@@ -33,6 +33,9 @@ parser.add_argument('-Q', metavar = "base_qual_thres", default='15', type=int,
 
 parser.add_argument("--loption", help = "use samtools mpileup -l option", action='store_true', default=False)
 
+parser.add_argument("--region", default = '', type = str,
+                    help = "restrict the chromosomal region for mutation. active only if loption is on")
+
 args = parser.parse_args()
 
 main(args)
