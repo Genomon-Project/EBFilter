@@ -6,14 +6,14 @@ import get_eb_score
 import sys, os, subprocess, math, re, multiprocessing 
 import vcf, pysam, numpy
 
-def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres):
+def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption):
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
     ##########
     # generate pileup files
-    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False)
-    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True)
+    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False, is_loption)
+    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True, is_loption)
     ##########
 
     ##########
@@ -71,14 +71,14 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
     subprocess.call(["rm", outputPath + '.control.pileup'])
 
 
-def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres):
+def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption):
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
     ##########
     # generate pileup files
-    process_anno.anno2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False)
-    process_anno.anno2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True)
+    process_anno.anno2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False, is_loption)
+    process_anno.anno2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True, is_loption)
     ##########
 
     ##########
@@ -150,7 +150,7 @@ def main(args):
     base_qual_thres = args.Q
     thread_num = args.t
     is_anno = True if args.f == 'anno' else False
-
+    is_loption = args.loption
 
     # file existence check
     if not os.path.exists(targetMutationFile):
@@ -185,9 +185,9 @@ def main(args):
     if thread_num == 1:
         # non multi-threading mode
         if is_anno == True:
-            EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres)
+            EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption)
         else: 
-            EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres)
+            EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption)
     else:
         # multi-threading mode
         ##########
@@ -199,7 +199,7 @@ def main(args):
             jobs = []
             for i in range(thread_num):
                 process = multiprocessing.Process(target = EBFilter_worker_anno, args = \
-                    (outputPath + ".tmp.input.anno." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres))
+                    (outputPath + ".tmp.input.anno." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres, is_loption))
                 jobs.append(process)
                 process.start()
         
@@ -222,7 +222,7 @@ def main(args):
             jobs = []
             for i in range(thread_num):
                 process = multiprocessing.Process(target = EBFilter_worker_vcf, args = \
-                    (outputPath + ".tmp.input.vcf." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres))
+                    (outputPath + ".tmp.input.vcf." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres, is_loption))
                 jobs.append(process)
                 process.start()
 

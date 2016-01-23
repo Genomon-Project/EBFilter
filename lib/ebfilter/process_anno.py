@@ -49,30 +49,53 @@ def merge_anno(inputFilePrefix, outputFilePath, partitionNum):
 
 
 
-def anno2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, is_multi):
+def anno2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, is_multi, is_loption):
 
     hIN = open(inputFilePath, 'r')
     hOUT = open(outputFilePath, 'w')
     FNULL = open(os.devnull, 'w')
 
-    for line in hIN:
+    if is_loption == True:
 
-        F = line.rstrip('\n').split('\t')
+        # make bed file for mpileup
+        hOUT2 = open(outputFilePath + "region_list.bed", 'w')
+        for line in hIN:
+            F = line.rstrip('\n').split('\t')
+            if F[4] == "-": # for deletion in anno format
+                print >> hOUT2, F[0] + '\t' + str(int(F[1]) - 2) + '\t' + str(int(F[1]) - 1) 
+            else:
+                print >> hOUT2, F[0] + '\t' + str(int(F[1]) - 1) + '\t' + F[1]
 
-        if F[4] == "-": # for deletion in anno format
-            mutReg = F[0] + ":" + str(int(F[1]) - 1)  + "-" + str(int(F[1]) - 1)  
-        else:
-            mutReg = F[0] + ":" + F[1] + "-" + F[1]
-    
-        samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-r", mutReg]
+        hOUT2.close()
+
+        samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", \
+                                    str(mapping_qual_thres), "-Q", str(base_qual_thres), "-l", outputFilePath + "region_list.bed"]
 
         if is_multi == True:
             samtools_mpileup_commands = samtools_mpileup_commands + ["-b", bamPath]
         else:
             samtools_mpileup_commands = samtools_mpileup_commands + [bamPath]
 
-
         subprocess.call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
+
+    else:
+        for line in hIN:
+
+            F = line.rstrip('\n').split('\t')
+
+            if F[4] == "-": # for deletion in anno format
+                mutReg = F[0] + ":" + str(int(F[1]) - 1)  + "-" + str(int(F[1]) - 1)  
+            else:
+                mutReg = F[0] + ":" + F[1] + "-" + F[1]
+    
+            samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-r", mutReg]
+
+            if is_multi == True:
+                samtools_mpileup_commands = samtools_mpileup_commands + ["-b", bamPath]
+            else:
+                samtools_mpileup_commands = samtools_mpileup_commands + [bamPath]
+
+            subprocess.call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
 
     FNULL.close()
     hIN.close()
