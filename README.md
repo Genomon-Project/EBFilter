@@ -21,7 +21,6 @@ We would like you to kindly cite the following paper when you use this software;
 Nucleic Acids Research, 2013.
 
 
-<!--
 # Motivation
 
 One major source of false positive somatic mutation in cancer genome sequencing data analysis is,
@@ -42,7 +41,6 @@ Therefore, we decided to implement a software which just perform beta-binomial s
 Therefore, you can use this software after performing popular mutation callers (e.g., mutects, VarScan2,and so on),
 or your own inhouse mutation caling program, which we believe will reduce large parts of false positives.
 
--->
 
 
 ## Dependency
@@ -73,11 +71,16 @@ python setup.py install
 
 ## Commands
 
-    EBFilter target.vcf target.bam list_normal_sample.txt output.vcf
-  
-- **-q**: The threshold of mapping quality. The short reads wholse mapping quality are smaller than this value are skipped [defaut: 20].
+    EBFilter [-h] [--version] [-f {vcf,anno}] [-t thread_num]
+                [-q mapping_qual_thres] [-Q base_qual_thres] [--loption]
+                [--region REGION]
+                target.vcf target.bam controlBam_list.txt output.vcf
+- **-f**: input mutation data format (indexed vcf format or annovar format) [default: vcf]
+- **-q**: The threshold of mapping quality. The short reads wholse mapping quality are smaller than this value are skipped [default: 20].
 - **-Q**: The threshold of base quality. The bases whose base quality are smaller than this value are skipped [default: 15].
 - **-t**: The number of threads [default: 1].
+- **--loption**: If this option is on, -l option in samtools mpileup is used. In the default settings, EBFilter calculate the bases for each option repeatedly using samtools mpileup with -r option. This is suitable for investigating small number of mutation, However, using --loption is highly recomended for large number of mutations and will be effective when combining --region option below.
+- **--regoin**: speficify genomic region for investigation.
 
 When finished, the output.vcf includes the score calculated by validation by beta-binomial sequencing error model (**EB** tag).
 
