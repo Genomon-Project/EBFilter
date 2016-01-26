@@ -61,11 +61,11 @@ def anno2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base
         for line in hIN:
             F = line.rstrip('\n').split('\t')
             if F[4] == "-": # for deletion in anno format
-                # print >> hOUT2, F[0] + '\t' + str(int(F[1]) - 2) + '\t' + str(int(F[1]) - 1) 
-                print >> hOUT2, F[0] + '\t' + str(int(F[1]) - 1)
+                print >> hOUT2, F[0] + '\t' + str(int(F[1]) - 2) + '\t' + str(int(F[1]) - 1) 
+                # print >> hOUT2, F[0] + '\t' + str(int(F[1]) - 1)
             else:
-                # print >> hOUT2, F[0] + '\t' + str(int(F[1]) - 1) + '\t' + F[1]
-                print >> hOUT2, F[0] + '\t' + F[1]
+                print >> hOUT2, F[0] + '\t' + str(int(F[1]) - 1) + '\t' + F[1]
+                # print >> hOUT2, F[0] + '\t' + F[1]
 
         hOUT2.close()
 
