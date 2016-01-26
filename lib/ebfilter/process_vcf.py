@@ -62,7 +62,7 @@ def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_
         hOUT2.close()
 
         samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", \
-                                    str(mapping_qual_thres), "-Q", str(base_qual_thres), "-l", outputFilePath + "region_list.bed"]
+                                    str(mapping_qual_thres), "-Q", str(base_qual_thres), "-l", outputFilePath + ".region_list.bed"]
 
         if region != "":
             samtools_mpileup_commands = samtools_mpileup_commands + ["-r", region]
