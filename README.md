@@ -45,6 +45,9 @@ or your own inhouse mutation caling program, which we believe will reduce large 
 
 ## Dependency
 
+### Software
+samtools
+
 ### Python
 Python (>= 2.7), `pysam`, `scipy`, `numpy`, `pyVCF` packages
 
