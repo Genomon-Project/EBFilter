@@ -8,7 +8,7 @@ import vcf, pysam, numpy
 
 region_exp = re.compile('^([^ \t\n\r\f\v,]+):(\d+)\-(\d+)')
 
-def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region):
+def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode):
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
@@ -83,11 +83,12 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
 
 
     # delete intermediate files
-    subprocess.call(["rm", outputPath + '.target.pileup'])
-    subprocess.call(["rm", outputPath + '.control.pileup'])
+    if debug_mode == False:
+        subprocess.call(["rm", outputPath + '.target.pileup'])
+        subprocess.call(["rm", outputPath + '.control.pileup'])
 
 
-def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region):
+def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode):
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
@@ -161,8 +162,9 @@ def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, 
 
 
     # delete intermediate files
-    subprocess.call(["rm", outputPath + '.target.pileup'])
-    subprocess.call(["rm", outputPath + '.control.pileup'])
+    if debug_mode == False:
+        subprocess.call(["rm", outputPath + '.target.pileup'])
+        subprocess.call(["rm", outputPath + '.control.pileup'])
 
 
 
@@ -180,6 +182,7 @@ def main(args):
     is_anno = True if args.f == 'anno' else False
     is_loption = args.loption
     region = args.region
+    debug_mode = args.debug
 
     # region format check
     if region != "":
@@ -221,9 +224,9 @@ def main(args):
     if thread_num == 1:
         # non multi-threading mode
         if is_anno == True:
-            EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region)
+            EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode)
         else: 
-            EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region)
+            EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode)
     else:
         # multi-threading mode
         ##########
@@ -235,7 +238,7 @@ def main(args):
             jobs = []
             for i in range(thread_num):
                 process = multiprocessing.Process(target = EBFilter_worker_anno, args = \
-                    (outputPath + ".tmp.input.anno." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres, is_loption))
+                    (outputPath + ".tmp.input.anno." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode))
                 jobs.append(process)
                 process.start()
         
@@ -247,9 +250,10 @@ def main(args):
             process_anno.merge_anno(outputPath + ".", outputPath, thread_num)
         
             # delete intermediate files
-            for i in range(thread_num):
-                subprocess.call(["rm", outputPath + ".tmp.input.anno." + str(i)])
-                subprocess.call(["rm", outputPath + "." + str(i)])
+            if debug_mode == False:
+                for i in range(thread_num):
+                    subprocess.call(["rm", outputPath + ".tmp.input.anno." + str(i)])
+                    subprocess.call(["rm", outputPath + "." + str(i)])
 
         else:
             # partition vcf files
@@ -258,7 +262,7 @@ def main(args):
             jobs = []
             for i in range(thread_num):
                 process = multiprocessing.Process(target = EBFilter_worker_vcf, args = \
-                    (outputPath + ".tmp.input.vcf." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres, is_loption))
+                    (outputPath + ".tmp.input.vcf." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode))
                 jobs.append(process)
                 process.start()
 
@@ -270,9 +274,10 @@ def main(args):
             process_vcf.merge_vcf(outputPath + ".", outputPath, thread_num)
 
             # delete intermediate files
-            for i in range(thread_num):
-                subprocess.call(["rm", outputPath + ".tmp.input.vcf." + str(i)])
-                subprocess.call(["rm", outputPath + "." + str(i)])
+            if debug_mode == False:
+                for i in range(thread_num):
+                    subprocess.call(["rm", outputPath + ".tmp.input.vcf." + str(i)])
+                    subprocess.call(["rm", outputPath + "." + str(i)])
 
 
 

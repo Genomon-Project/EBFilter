@@ -70,10 +70,9 @@ python setup.py install
 		/home/yshira/ngs/data/sequence/normalreference10.bam
 
 ## Commands
-
     EBFilter [-h] [--version] [-f {vcf,anno}] [-t thread_num]
                 [-q mapping_qual_thres] [-Q base_qual_thres] [--loption]
-                [--region REGION]
+                [--region REGION] [--debug]
                 target.vcf target.bam controlBam_list.txt output.vcf
 - **-f**: input mutation data format (indexed vcf format or annovar format) [default: vcf]
 - **-q**: The threshold of mapping quality. The short reads wholse mapping quality are smaller than this value are skipped [default: 20].

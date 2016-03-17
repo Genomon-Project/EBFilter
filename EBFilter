@@ -36,6 +36,8 @@ parser.add_argument("--loption", help = "use samtools mpileup -l option", action
 parser.add_argument("--region", default = '', type = str,
                     help = "restrict the chromosomal region for mutation. active only if loption is on")
 
+parser.add_argument("--debug", default = False, action = 'store_true', help = "keep intermediate files")
+
 args = parser.parse_args()
 
 main(args)
