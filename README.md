@@ -83,6 +83,7 @@ python setup.py install
 - **-t**: The number of threads [default: 1].
 - **--loption**: If this option is on, -l option in samtools mpileup is used. In the default settings, EBFilter calculate the bases for each option repeatedly using samtools mpileup with -r option. This is suitable for investigating small number of mutation, However, using --loption is highly recomended for large number of mutations and will be effective when combining --region option below.
 - **--regoin**: speficify genomic region for investigation.
+- **--debug**: do not delete intermediate file (for mainly debugging).
 
 When finished, the output.vcf includes the score calculated by validation by beta-binomial sequencing error model (**EB** tag).
 
