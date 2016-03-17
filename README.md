@@ -45,6 +45,9 @@ or your own inhouse mutation caling program, which we believe will reduce large 
 
 ## Dependency
 
+### Software
+[samtools](http://www.htslib.org/)
+
 ### Python
 Python (>= 2.7), `pysam`, `scipy`, `numpy`, `pyVCF` packages
 
@@ -59,7 +62,7 @@ python setup.py install
 ```
 
 ## Preparation
-
+- add path to samtools.
 - **target somatic mutation candidats**: the somatic mutation candidates (should be .vcf format).
 - **target tumor sample**: the indexed bam file of the target tumor sample.
 - **list of normal reference samples**: the list of paths to the indexed bam files for non-paired normal reference samples. Please name the text file as you like (e.g., myNormalRef.txt), and list the paths of .bam files as follows:  
