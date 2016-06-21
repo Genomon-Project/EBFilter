@@ -42,6 +42,6 @@ def get_eb_score(var, F_target, F_control, base_qual_thres, controlFileNum):
         EB_score = 0
     else:
         EB_score = - round(math.log10(EB_pvalue), 3)
- 
+
     return EB_score
 
