@@ -46,7 +46,7 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
     ##########
 
     vcf_reader = vcf.Reader(open(targetMutationFile, 'r'))
-    vcf_reader.infos['EB'] = vcf.parser._Info('EB', 1, 'Float', "EBCall Score", "EBCall", "ver0.1.0")
+    vcf_reader.infos['EB'] = vcf.parser._Info('EB', 1, 'Float', "EBCall Score", "EBCall", "ver0.1.2")
     vcf_writer =vcf.Writer(open(outputPath, 'w'), vcf_reader)
 
 
