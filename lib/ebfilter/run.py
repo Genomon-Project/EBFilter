@@ -8,14 +8,14 @@ import vcf, pysam, numpy
 
 region_exp = re.compile('^([^ \t\n\r\f\v,]+):(\d+)\-(\d+)')
 
-def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode):
+def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, base_qual_thres, is_loption, region, debug_mode, samtools_params):
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
     ##########
     # generate pileup files
-    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False, is_loption, region)
-    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True, is_loption, region)
+    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, False, is_loption, region, samtools_params)
+    process_vcf.vcf2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, True, is_loption, region, samtools_params)
     ##########
 
     ##########
@@ -88,14 +88,14 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
         subprocess.call(["rm", outputPath + '.control.pileup'])
 
 
-def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode):
+def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, base_qual_thres, is_loption, region, debug_mode, samtools_params):
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
     ##########
     # generate pileup files
-    process_anno.anno2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath, mapping_qual_thres, base_qual_thres, False, is_loption, region)
-    process_anno.anno2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, mapping_qual_thres, base_qual_thres, True, is_loption, region)
+    process_anno.anno2pileup(targetMutationFile, outputPath + '.target.pileup', targetBamPath,  False, is_loption, region, samtools_params)
+    process_anno.anno2pileup(targetMutationFile, outputPath + '.control.pileup', controlBamPathList, True, is_loption, region, samtools_params)
     ##########
 
     ##########
@@ -176,8 +176,7 @@ def main(args):
     controlBamPathList = args.controlBamPathList
     outputPath = args.outputPath
 
-    mapping_qual_thres = args.q
-    base_qual_thres = args.Q
+    samtools_params = args.s
     thread_num = args.t
     is_anno = True if args.f == 'anno' else False
     is_loption = args.loption
@@ -220,13 +219,24 @@ def main(args):
                 print >> sys.stderr, "No index control bam file: " + file 
                 sys.exit(1)
 
+    base_qual_thres = 13
+    pattern = re.compile("-Q[0-9]+")
+    sam_params_list = samtools_params.split()
+    for i,opt in enumerate(sam_params_list):
+        if opt == "-Q" or opt=="--min-BQ":
+            base_qual_thres = sam_params_list[i+1]
+        match = pattern.search(opt)
+        if match != None:
+            optQ = match.group(0)
+            base_qual_thres = optQ.replace("-Q", "")
+    base_qual_thres = int(base_qual_thres)
      
     if thread_num == 1:
         # non multi-threading mode
         if is_anno == True:
-            EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode)
+            EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, base_qual_thres, is_loption, region, debug_mode, samtools_params)
         else: 
-            EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode)
+            EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, base_qual_thres, is_loption, region, debug_mode, samtools_params)
     else:
         # multi-threading mode
         ##########
@@ -238,7 +248,7 @@ def main(args):
             jobs = []
             for i in range(thread_num):
                 process = multiprocessing.Process(target = EBFilter_worker_anno, args = \
-                    (outputPath + ".tmp.input.anno." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode))
+                    (outputPath + ".tmp.input.anno." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), base_qual_thres, is_loption, region, debug_mode, samtools_params))
                 jobs.append(process)
                 process.start()
         
@@ -262,7 +272,7 @@ def main(args):
             jobs = []
             for i in range(thread_num):
                 process = multiprocessing.Process(target = EBFilter_worker_vcf, args = \
-                    (outputPath + ".tmp.input.vcf." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), mapping_qual_thres, base_qual_thres, is_loption, region, debug_mode))
+                    (outputPath + ".tmp.input.vcf." + str(i), targetBamPath, controlBamPathList, outputPath + "." + str(i), base_qual_thres, is_loption, region, debug_mode, samtools_params))
                 jobs.append(process)
                 process.start()
 

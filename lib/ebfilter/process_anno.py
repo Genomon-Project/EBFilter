@@ -48,7 +48,7 @@ def merge_anno(inputFilePrefix, outputFilePath, partitionNum):
 
 
 
-def anno2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, is_multi, is_loption, region):
+def anno2pileup(inputFilePath, outputFilePath, bamPath, is_multi, is_loption, region, samtools_params):
 
     hIN = open(inputFilePath, 'r')
     hOUT = open(outputFilePath, 'w')
@@ -69,8 +69,8 @@ def anno2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base
 
         hOUT2.close()
 
-        samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", \
-                                    str(mapping_qual_thres), "-Q", str(base_qual_thres), "-l", outputFilePath + ".region_list.bed"]
+        samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-l", outputFilePath + ".region_list.bed"]
+        samtools_mpileup_commands = samtools_mpileup_commands + [samtools_params]
 
         if region != "":
             samtools_mpileup_commands = samtools_mpileup_commands + ["-r", region]
@@ -93,7 +93,8 @@ def anno2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base
             else:
                 mutReg = F[0] + ":" + F[1] + "-" + F[1]
     
-            samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-r", mutReg]
+            samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-r", mutReg]
+            samtools_mpileup_commands = samtools_mpileup_commands + [samtools_params]
 
             if is_multi == True:
                 samtools_mpileup_commands = samtools_mpileup_commands + ["-b", bamPath]
