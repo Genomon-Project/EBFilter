@@ -74,12 +74,14 @@ python setup.py install
 
 ## Commands
     EBFilter [-h] [--version] [-f {vcf,anno}] [-t thread_num]
-                [-s samtools_params] [--loption]
-                [--region REGION] [--debug]
+                [-q mapping_qual_thres] [-Q base_qual_thres] [-ff filter_flags]
+                [--loption] [--region REGION] [--debug]
                 target.vcf target.bam controlBam_list.txt output.vcf
 - **-f**: input mutation data format (indexed vcf format or annovar format) [default: vcf]
-- **-s**: additional parameters of the samtools mpileup [default: "-q 20 -Q 15 -d 10000000"].
+- **-q**: The threshold of mapping quality. The short reads wholse mapping quality are smaller than this value are skipped [default: 20].
+- **-Q**: The threshold of base quality. The bases whose base quality are smaller than this value are skipped [default: 15].
 - **-t**: The number of threads [default: 1].
+- **--ff**: skip reads with mask bits set. [default: UNMAP,SECONDARY,QCFAIL,DUP] 
 - **--loption**: If this option is on, -l option in samtools mpileup is used. In the default settings, EBFilter calculate the bases for each option repeatedly using samtools mpileup with -r option. This is suitable for investigating small number of mutation, However, using --loption is highly recomended for large number of mutations and will be effective when combining --region option below.
 - **--region**: speficify genomic region for investigation.
 - **--debug**: do not delete intermediate file (for mainly debugging).
