@@ -72,8 +72,8 @@ def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_
         else:
             samtools_mpileup_commands = samtools_mpileup_commands + [bamPath]
 
-        subprocess.call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
-        subprocess.call(["rm", "-f", outputFilePath + ".region_list.bed"])
+        subprocess.check_call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
+        subprocess.check_call(["rm", "-f", outputFilePath + ".region_list.bed"])
 
     else:
 
@@ -90,7 +90,7 @@ def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_
 
             # print ' '.join(samtools_mpileup_commands)
 
-            subprocess.call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
+            subprocess.check_call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
 
 
     FNULL.close()

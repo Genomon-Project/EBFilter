@@ -84,8 +84,8 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
 
     # delete intermediate files
     if debug_mode == False:
-        subprocess.call(["rm", outputPath + '.target.pileup'])
-        subprocess.call(["rm", outputPath + '.control.pileup'])
+        subprocess.check_call(["rm", outputPath + '.target.pileup'])
+        subprocess.check_call(["rm", outputPath + '.control.pileup'])
 
 
 def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, filter_flags, is_loption, region, debug_mode):
@@ -163,8 +163,8 @@ def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, 
 
     # delete intermediate files
     if debug_mode == False:
-        subprocess.call(["rm", outputPath + '.target.pileup'])
-        subprocess.call(["rm", outputPath + '.control.pileup'])
+        subprocess.check_call(["rm", outputPath + '.target.pileup'])
+        subprocess.check_call(["rm", outputPath + '.control.pileup'])
 
 
 
@@ -252,8 +252,8 @@ def main(args):
             # delete intermediate files
             if debug_mode == False:
                 for i in range(thread_num):
-                    subprocess.call(["rm", outputPath + ".tmp.input.anno." + str(i)])
-                    subprocess.call(["rm", outputPath + "." + str(i)])
+                    subprocess.check_call(["rm", outputPath + ".tmp.input.anno." + str(i)])
+                    subprocess.check_call(["rm", outputPath + "." + str(i)])
 
         else:
             # partition vcf files
@@ -276,8 +276,8 @@ def main(args):
             # delete intermediate files
             if debug_mode == False:
                 for i in range(thread_num):
-                    subprocess.call(["rm", outputPath + ".tmp.input.vcf." + str(i)])
-                    subprocess.call(["rm", outputPath + "." + str(i)])
+                    subprocess.check_call(["rm", outputPath + ".tmp.input.vcf." + str(i)])
+                    subprocess.check_call(["rm", outputPath + "." + str(i)])
 
 
 

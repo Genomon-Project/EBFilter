@@ -5,7 +5,7 @@ import argparse
 
 parser = argparse.ArgumentParser(prog = "EBFilter")
 
-parser.add_argument("--version", action = "version", version = "EBFilter-0.2.0")
+parser.add_argument("--version", action = "version", version = "EBFilter-0.2.1")
 
 parser.add_argument("targetMutationFile", metavar = "target.vcf", type = str,
                           help = "the path to the mutation file")
