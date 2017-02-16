@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='ebfilter',
-      version='0.1.2',
+      version='0.2.1',
       description='Python tools for filtering somatic mutations using beta-binomial sequencing error model.',
       author='Yuichi Shiraishi',
       author_email='friend1ws@gamil.com',

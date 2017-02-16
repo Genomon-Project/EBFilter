@@ -46,7 +46,7 @@ def merge_vcf(inputFilePrefix, outputFilePath, partitionNum):
 
 
 
-def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, is_multi, is_loption, region):
+def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, filter_flags, is_multi, is_loption, region):
 
     vcf_reader = vcf.Reader(open(inputFilePath, 'r'))
     hOUT = open(outputFilePath, 'w')
@@ -62,7 +62,7 @@ def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_
         hOUT2.close()
 
         samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", \
-                                    str(mapping_qual_thres), "-Q", str(base_qual_thres), "-l", outputFilePath + ".region_list.bed"]
+         str(mapping_qual_thres), "-Q", str(base_qual_thres), "--ff", filter_flags, "-l", outputFilePath + ".region_list.bed"]
 
         if region != "":
             samtools_mpileup_commands = samtools_mpileup_commands + ["-r", region]
@@ -72,8 +72,8 @@ def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_
         else:
             samtools_mpileup_commands = samtools_mpileup_commands + [bamPath]
 
-        subprocess.call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
-        subprocess.call(["rm", "-f", outputFilePath + ".region_list.bed"])
+        subprocess.check_call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
+        subprocess.check_call(["rm", "-f", outputFilePath + ".region_list.bed"])
 
     else:
 
@@ -81,7 +81,7 @@ def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_
 
             mutReg = record.CHROM + ":" + str(record.POS) + "-" + str(record.POS)
         
-            samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "-r", mutReg]
+            samtools_mpileup_commands = ["samtools", "mpileup", "-B", "-d", "10000000", "-q", str(mapping_qual_thres), "-Q", str(base_qual_thres), "--ff", filter_flags, "-r", mutReg]
 
             if is_multi == True:
                 samtools_mpileup_commands = samtools_mpileup_commands + ["-b", bamPath]
@@ -90,7 +90,7 @@ def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_
 
             # print ' '.join(samtools_mpileup_commands)
 
-            subprocess.call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
+            subprocess.check_call(samtools_mpileup_commands, stdout = hOUT, stderr = FNULL)
 
 
     FNULL.close()
