@@ -2,14 +2,14 @@
 
 ## Introduction
 
-EBFilter is a software for filtering false poistive somatic mutations in cancer genome sequencing data analysis.
-EBFilter accepts a list of candidates somatic mutation alreadly narrowed down to some extents, and performs the main step of [EBCall](https://github.com/friend1ws/EBCall), 
+EBFilter is a software for filtering false positives somatic mutations in cancer genome sequencing data analysis.
+EBFilter accepts a list of candidates somatic mutation already narrowed down to some extents, and performs the main step of [EBCall](https://github.com/friend1ws/EBCall), 
 
-1. estimate the parameters of the beta-binomial sequencing error model using multiple non-matched contorol sequencing data at the position of interest
+1. estimate the parameters of the beta-binomial sequencing error model using multiple non-matched control sequencing data at the position of interest
 2. get the predictive mismatch ratio derived from the above estimation and compare it with the observed mismatch ratio of tumor samples
-3. if the mismatch ratio of the tumor sample is significantly deviated from the predicted mismatch ratio, then we idenitfy it as highly-likely somatic mutation
+3. if the mismatch ratio of the tumor sample is significantly deviated from the predicted mismatch ratio, then we identify it as highly-likely somatic mutation
 
-Therefore, you can use EBFilter along with your own mutation calling program 
+Therefore, you can use EBFilter along with your own mutation calling program  
 or some popular mutation callers (e.g., MuTect, VarScan 2),
 which we believe will reduce large parts of false positives with a slight computational cost.
 
@@ -24,9 +24,9 @@ Nucleic Acids Research, 2013.
 # Motivation
 
 One major source of false positive somatic mutation in cancer genome sequencing data analysis is,
-"broken symetry of mismatches between tumor and normal sequencing data that randomly occurs at the error-prone sites"
+"broken symmetry of mismatches between tumor and normal sequencing data that randomly occurs at the error-prone sites"
 (see e.g., Figure 1, Shiraishi et al., NAR, 2013).
-Therefore, one of the most important techniques for reducing false positive mutations is to check many control sequencing data (including non-matched normal samples), to see whether the candidates are artifacts produced at the error-prone sites, and many somatic mutation calling pipeline adopt this strategy.
+Therefore, one of the most important techniques for reducing false positive mutations is to check many control sequencing data (including non-matched normal samples), to see whether the candidates are artifacts produced at the error-prone sites, and many somatic mutations calling pipeline adopt this strategy.
 
 EBCall uses 
 
@@ -35,11 +35,11 @@ EBCall uses
 3. if the mismatch ratio of the tumor sample is significantly deviated from the predicted mismatch ratio, then we idenitfy it as highly-likely somatic mutation
 
 
-EBCall is actually integrating many other steps (Fisher's exact test), and could not perfrom purely the above beta-binomial filteringt step.
+EBCall is actually integrating many other steps (Fisher's exact test), and could not perform purely the above beta-binomial filteringt step.
 Therefore, we decided to implement a software which just perform beta-binomial step for already collected candidates of somatic mutations.
 
 Therefore, you can use this software after performing popular mutation callers (e.g., mutects, VarScan2,and so on),
-or your own inhouse mutation caling program, which we believe will reduce large parts of false positives.
+or your own inhouse mutation calling program, which we believe will reduce large parts of false positives.
 
 
 
