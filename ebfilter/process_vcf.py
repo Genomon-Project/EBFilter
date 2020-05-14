@@ -1,11 +1,13 @@
 #! /usr/bin/env python
 
-import vcf, os, subprocess
+from __future__ import print_function
+import vcfpy, os, subprocess
 
 
 def partition_vcf(inputFilePath, outputFilePrefix, partitionNum):
 
-    vcf_reader1 = vcf.Reader(filename = inputFilePath)
+    vcf_reader1 = vcfpy.Reader.from_path(inputFilePath)
+    # vcf_reader1 = vcf.Reader(filename = inputFilePath)
     recordNum = 0
     for record in vcf_reader1:
         recordNum += 1
@@ -16,8 +18,10 @@ def partition_vcf(inputFilePath, outputFilePrefix, partitionNum):
     currentPartition = 0
     currentRecordNum = 0
     
-    vcf_reader2 = vcf.Reader(filename = inputFilePath)
-    vcf_writer = vcf.Writer(open(outputFilePrefix + "0", 'w'), vcf_reader2)
+    vcf_reader2 = vcfpy.Reader.from_path(inputFilePath)
+    # vcf_reader2 = vcf.Reader(filename = inputFilePath)
+    vcf_writer = vcfpy.Writer.from_path(outputFilePrefix + "0", vcf_reader2.header)
+    # vcf_writer = vcf.Writer(open(outputFilePrefix + "0", 'w'), vcf_reader2)
     for record in vcf_reader2:
         vcf_writer.write_record(record)
         currentRecordNum += 1
@@ -25,7 +29,8 @@ def partition_vcf(inputFilePath, outputFilePrefix, partitionNum):
             currentPartition += 1
             currentRecordNum = 0
             vcf_writer.close()
-            vcf_writer = vcf.Writer(open(outputFilePrefix + str(currentPartition), 'w'), vcf_reader2) 
+            vcf_writer = vcfpy.Writer.from_path(outputFilePrefix + str(currentPartition), vcf_reader2.header)
+            # vcf_writer = vcf.Writer(open(outputFilePrefix + str(currentPartition), 'w'), vcf_reader2) 
 
     vcf_writer.close()
 
@@ -34,11 +39,14 @@ def partition_vcf(inputFilePath, outputFilePrefix, partitionNum):
 
 def merge_vcf(inputFilePrefix, outputFilePath, partitionNum):
 
-    vcf_reader = vcf.Reader(filename = inputFilePrefix + '0')
-    vcf_writer = vcf.Writer(open(outputFilePath, 'w'), vcf_reader)    
+    vcf_reader = vcfpy.Reader.from_path(inputFilePrefix + '0')
+    # vcf_reader = vcf.Reader(filename = inputFilePrefix + '0')
+    vcf_writer = vcfpy.Writer.from_path(outputFilePath, vcf_reader.header)
+    # vcf_writer = vcf.Writer(open(outputFilePath, 'w'), vcf_reader)    
 
     for i in range(partitionNum):
-        vcf_reader = vcf.Reader(filename = inputFilePrefix + str(i))
+        vcf_reader = vcfpy.Reader.from_path(inputFilePrefix + str(i))
+        # vcf_reader = vcf.Reader(filename = inputFilePrefix + str(i))
         for record in vcf_reader:
             vcf_writer.write_record(record)
     
@@ -48,7 +56,8 @@ def merge_vcf(inputFilePrefix, outputFilePath, partitionNum):
 
 def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_qual_thres, filter_flags, is_multi, is_loption, region):
 
-    vcf_reader = vcf.Reader(open(inputFilePath, 'r'))
+    vcf_reader = vcfpy.Reader.from_path(inputFilePath)
+    # vcf_reader = vcf.Reader(open(inputFilePath, 'r'))
     hOUT = open(outputFilePath, 'w')
     FNULL = open(os.devnull, 'w')
 
@@ -57,7 +66,7 @@ def vcf2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base_
         # make bed file for mpileup
         hOUT2 = open(outputFilePath + ".region_list.bed", 'w')
         for record in vcf_reader:
-            print >> hOUT2, record.CHROM + '\t' + str(record.POS - 1) + '\t' + str(record.POS)
+            print(record.CHROM + '\t' + str(record.POS - 1) + '\t' + str(record.POS), file=hOUT2)
 
         hOUT2.close()
 

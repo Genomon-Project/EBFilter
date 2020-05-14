@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+from functools import reduce
 import math
 import numpy
 import scipy.optimize

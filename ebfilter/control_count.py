@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
 import collections
 import pysam, re, sys
+from builtins import chr
 
 ReIndel = re.compile('([\+\-])([0-9]+)([ACGTNacgtn]+)')
 ReStart = re.compile('\^.')
@@ -16,7 +18,7 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres, verbose):
     # this should be moved to global (just one evaluation should be enough...
     filter_quals = ''
     for qual in range( 33, 33 + base_qual_thres ):
-        filter_quals += str( unichr( qual ) )
+        filter_quals += str( chr( qual ) )
 
 
     if depth == 0: return [0,0,0,0]
@@ -80,8 +82,8 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres, verbose):
 
     # error check
     if len(baseBar) != len(qualBar):
-        print >> sys.stderr, baseBar + '\n' + qualBar
-        print >> sys.stderr, "lengths of bases and qualities are different!"
+        print(baseBar + '\n' + qualBar, file=sys.stderr)
+        print("lengths of bases and qualities are different!", file=sys.stderr)
         sys.exit(1)
 
 
@@ -121,7 +123,7 @@ def varCountCheck(var, depth, baseBar, qualBar, base_qual_thres, verbose):
             else:
                 misMatch_p, misMatch_n = deletion_p, deletion_n
         else:
-            print >> sys.stderr, var + ": input var has wrong format!"
+            print(var + ": input var has wrong format!",file=sys.stderr)
             sys.exit(1)
 
 
