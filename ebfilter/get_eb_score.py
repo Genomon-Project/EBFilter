@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
-import control_count
-import beta_binomial
-import utils
+from . import control_count
+from . import beta_binomial
+from . import utils
 import math, numpy
 
 def get_eb_score(var, F_target, F_control, base_qual_thres, controlFileNum):
@@ -22,7 +22,7 @@ def get_eb_score(var, F_target, F_control, base_qual_thres, controlFileNum):
 
     # obtain the mismatch numbers and depths (for positive and negative strands) of control sequence data
     # for i in range(controlFileNum):
-    for i in range(len(F_control) / 3):
+    for i in range(len(F_control) // 3):
         varCounts_control_p[i], depthCounts_control_p[i], varCounts_control_n[i], depthCounts_control_n[i] = control_count.varCountCheck(var, F_control[3 * i], F_control[1 + 3 * i], F_control[2 + 3 * i], base_qual_thres, True)
 
     # estimate the beta-binomial parameters for positive and negative strands

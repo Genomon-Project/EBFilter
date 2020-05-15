@@ -1,14 +1,16 @@
 #! /usr/bin/env python
 
-import process_vcf
-import process_anno
-import get_eb_score
+from __future__ import print_function
+from . import get_eb_score
 import sys, os, subprocess, math, re, multiprocessing 
-import vcf, pysam, numpy
+import pysam, numpy
 
 region_exp = re.compile('^([^ \t\n\r\f\v,]+):(\d+)\-(\d+)')
 
 def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, filter_flags, is_loption, region, debug_mode):
+
+    import vcfpy
+    from . import process_vcf
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
@@ -45,9 +47,15 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
         reg_end = int(region_match.group(3))
     ##########
 
-    vcf_reader = vcf.Reader(open(targetMutationFile, 'r'))
-    vcf_reader.infos['EB'] = vcf.parser._Info('EB', 1, 'Float', "EBCall Score", "EBCall", "ver0.2.0")
-    vcf_writer =vcf.Writer(open(outputPath, 'w'), vcf_reader)
+    vcf_reader = vcfpy.Reader.from_path(targetMutationFile)
+
+    vcf_reader.header.add_info_line(vcfpy.OrderedDict(
+        [('ID','EB'), ('Number','1'), ('Type','Float'), ('Description','EBCall Score')]))
+    vcf_writer = vcfpy.Writer.from_path(outputPath, vcf_reader.header)
+
+    # vcf_reader = vcf.Reader(open(targetMutationFile, 'r'))
+    # vcf_reader.infos['EB'] = vcf.parser._Info('EB', 1, 'Float', "EBCall Score", "EBCall", "ver0.2.0")
+    # vcf_writer =vcf.Writer(open(outputPath, 'w'), vcf_reader)
 
 
     for vcf_record in vcf_reader:
@@ -61,7 +69,7 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
         F_control = pos2pileup_control[current_pos].split('\t') if current_pos in pos2pileup_control else []
 
         current_ref = str(vcf_record.REF)
-        current_alt = str(vcf_record.ALT[0])
+        current_alt = str(vcf_record.ALT[0].value)
         var = ""
         if len(current_ref) == 1 and len(current_alt) == 1:
             var = current_alt
@@ -89,6 +97,8 @@ def EBFilter_worker_vcf(targetMutationFile, targetBamPath, controlBamPathList, o
 
 
 def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, outputPath, mapping_qual_thres, base_qual_thres, filter_flags, is_loption, region, debug_mode):
+
+    from . import process_anno
 
     controlFileNum = sum(1 for line in open(controlBamPathList, 'r'))
 
@@ -155,7 +165,7 @@ def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, 
             EB_score = get_eb_score.get_eb_score(var, F_target, F_control, base_qual_thres, controlFileNum)
 
         # add the score and write the vcf record
-        print >> hOUT, '\t'.join(F + [str(EB_score)])
+        print('\t'.join(F + [str(EB_score)]), file=hOUT)
 
     hIN.close()
     hOUT.close()
@@ -168,7 +178,7 @@ def EBFilter_worker_anno(targetMutationFile, targetBamPath, controlBamPathList, 
 
 
 
-def main(args):
+def ebfilter_main(args):
 
     # should add validity check for arguments
     targetMutationFile = args.targetMutationFile
@@ -189,36 +199,36 @@ def main(args):
     if region != "":
         region_match = region_exp.match(region)
         if region_match is None:
-            print >> sys.stderr, "Wrong format for --region ({chr}:{start}-{end}): " + region
+            print("Wrong format for --region ({chr}:{start}-{end}): " + region, file=sys.stderr)
             sys.exit(1)
 
     # file existence check
     if not os.path.exists(targetMutationFile):
-        print >> sys.stderr, "No target mutation file: " + targetMutationFile
+        print("No target mutation file: " + targetMutationFile, file=sys.stderr)
         sys.exit(1)
 
     if not os.path.exists(targetBamPath):
-        print >> sys.stderr, "No target bam file: " + targetBamPath
+        print("No target bam file: " + targetBamPath, file=sys.stderr)
         sys.exit(1)
 
     if not os.path.exists(targetBamPath + ".bai") and not os.path.exists(re.sub(r'bam$', "bai", targetBamPath)):
-        print >> sys.stderr, "No index for target bam file: " + targetBamPath
+        print("No index for target bam file: " + targetBamPath, file=sys.stderr)
         sys.exit(1)
 
 
     if not os.path.exists(controlBamPathList):
-        print >> sys.stderr, "No control list file: " + controlBamPathList 
+        print("No control list file: " + controlBamPathList, file=sys.stderr)
         sys.exit(1)
 
     with open(controlBamPathList) as hIN:
-        for file in hIN:
-            file = file.rstrip()
-            if not os.path.exists(file):
-                print >> sys.stderr, "No control bam file: " + file 
+        for in_file in hIN:
+            in_file = in_file.rstrip()
+            if not os.path.exists(in_file):
+                print("No control bam file: " + in_file, file=sys.stderr) 
                 sys.exit(1)
 
-            if not os.path.exists(file + ".bai") and not os.path.exists(re.sub(r'bam$', "bai", file)):
-                print >> sys.stderr, "No index control bam file: " + file 
+            if not os.path.exists(in_file + ".bai") and not os.path.exists(re.sub(r'bam$', "bai", in_file)):
+                print("No index control bam file: " + in_file, file=sys.stderr) 
                 sys.exit(1)
 
     if thread_num == 1:
@@ -232,6 +242,7 @@ def main(args):
         ##########
 
         if is_anno == True:
+            from . import process_anno
             # partition anno files
             process_anno.partition_anno(targetMutationFile, outputPath + ".tmp.input.anno.", thread_num)
 
@@ -256,6 +267,7 @@ def main(args):
                     subprocess.check_call(["rm", outputPath + "." + str(i)])
 
         else:
+            from . import process_vcf
             # partition vcf files
             process_vcf.partition_vcf(targetMutationFile, outputPath + ".tmp.input.vcf.", thread_num)
 

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
-import sys, vcf, os, subprocess
+from __future__ import print_function
+import sys, os, subprocess
 
 def partition_anno(inputFilePath, outputFilePrefix, partitionNum):
 
@@ -19,7 +20,7 @@ def partition_anno(inputFilePath, outputFilePrefix, partitionNum):
 
     hOUT = open(outputFilePrefix + "0", 'w')
     for line in hIN:
-        print >> hOUT, line.rstrip("\n")
+        print(line.rstrip("\n"), file=hOUT)
         currentRecordNum += 1
         if currentRecordNum >= eachPartitionNum and currentPartition < partitionNum_mod - 1:
             currentPartition += 1
@@ -41,7 +42,7 @@ def merge_anno(inputFilePrefix, outputFilePath, partitionNum):
     for i in range(partitionNum):
         hIN = open(inputFilePrefix + str(i), 'r')
         for line in hIN:
-            print >> hOUT, line.rstrip('\n')
+            print(line.rstrip('\n'), file=hOUT)
         hIN.close()
 
     hOUT.close()
@@ -61,10 +62,10 @@ def anno2pileup(inputFilePath, outputFilePath, bamPath, mapping_qual_thres, base
         for line in hIN:
             F = line.rstrip('\n').split('\t')
             if F[4] == "-": # for deletion in anno format
-                print >> hOUT2, F[0] + '\t' + str(int(F[1]) - 2) + '\t' + str(int(F[1]) - 1) 
+                print(F[0] + '\t' + str(int(F[1]) - 2) + '\t' + str(int(F[1]) - 1), file=hOUT2) 
                 # print >> hOUT2, F[0] + '\t' + str(int(F[1]) - 1)
             else:
-                print >> hOUT2, F[0] + '\t' + str(int(F[1]) - 1) + '\t' + F[1]
+                print(F[0] + '\t' + str(int(F[1]) - 1) + '\t' + F[1], file=hOUT2)
                 # print >> hOUT2, F[0] + '\t' + F[1]
 
         hOUT2.close()
