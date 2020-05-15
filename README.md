@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ken0-1n/EBFilter.svg?branch=devel)](https://travis-ci.org/ken0-1n/EBFilter) 
+
 # EBFilter (Empirical Bayesian Mutation Filtering)
 
 ## Introduction
@@ -49,6 +51,10 @@ or your own inhouse mutation caling program, which we believe will reduce large 
 [samtools](http://www.htslib.org/)
 
 ### Python
+EBFilter >= 0.2.2
+Python (>= 3.7), `pysam`, `scipy`, `numpy`, `vcfpy` packages
+
+EBFilter <= 0.2.1
 Python (>= 2.7), `pysam`, `scipy`, `numpy`, `pyVCF` packages
 
 
