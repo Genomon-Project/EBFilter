@@ -1,0 +1,23 @@
+language: python
+python:
+  - '3.7'
+before_script:
+
+- wget https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2
+- tar jxvf samtools-1.9.tar.bz2
+- cd samtools-1.9 && ./configure && make && export PATH=$PATH:$PWD && cd ..
+                                  
+- pip install numpy==1.18.1
+- pip install scipy==1.4.1
+- pip install pysam==0.15.3
+- pip install vcfpy==0.12.2
+
+script:
+    - python setup.py install
+    - python -m unittest tests.test_ebfilter
+notifications:
+    emails:
+        - kchiba@hgc.jp
+    on_success: change
+    on_failure: always
+
