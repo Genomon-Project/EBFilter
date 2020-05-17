@@ -33,7 +33,6 @@ class TestEBFilter(unittest.TestCase):
             print(cur_dir + "/../testdata/normalreference10.bam", file=hout)
 
         subprocess.check_call(["EBFilter", "-f", "anno", in_anno, in_bam, control_panel, output_file])
-        subprocess.check_call(["cat", output_file])
 
         answer_file = cur_dir + "/../testdata/output.golden.anno"
         self.assertTrue(filecmp.cmp(output_file, answer_file, shallow=False))
